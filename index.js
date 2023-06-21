@@ -1,2 +1,2 @@
 exports.Client = require('./client/Client')
-exports.EmbedBuilder = require('./lib/message/EmbedBuilder')
+exports.Embed = require('./lib/message/Embed')

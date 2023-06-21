@@ -1,5 +1,4 @@
 const WebSocket = require('ws');
-const axios = require('axios');
 const EventEmitter = require('events');
 
 class WebSocketManager {
@@ -8,6 +7,9 @@ class WebSocketManager {
     this.eventEmitter = new EventEmitter();
     this.ws = null;
     this.heartbeatInterval = null;
+    this.sessionId = null;
+    this.seq = null;
+    this.resumeAttempts = 0;
   }
 
   connect() {
@@ -20,12 +22,20 @@ class WebSocketManager {
 
     this.ws.on('message', async (data) => {
       const payload = JSON.parse(data);
-      require('../utils/Emit')(this, payload)
+      if (payload.s !== null) this.seq = payload.s;
+      require('../utils/Emit')(this, payload);
     });
 
-    this.ws.on('close', () => {
-      
+    this.ws.on('close', (code) => {
+      console.log(`Disconnected with code ${code}`);
       this.stopHeartbeat();
+      if (code === 4004 || code === 4010) {
+        // Invalid token or shard
+        console.log('Invalid token or shard. Please check your credentials.');
+        return;
+      }
+
+      this.resumeWebSocket();
     });
   }
 
@@ -46,12 +56,49 @@ class WebSocketManager {
 
   startHeartbeat() {
     this.heartbeatInterval = setInterval(() => {
-      this.ws.send(JSON.stringify({ op: 1, d: null }));
+      this.ws.send(JSON.stringify({ op: 1, d: this.seq }));
     }, 30000);
   }
 
   stopHeartbeat() {
     clearInterval(this.heartbeatInterval);
+  }
+
+  resumeWebSocket() {
+    if (this.resumeAttempts > 5) {
+      console.log('Resume failed. Exceeded maximum resume attempts.');
+      return;
+    }
+
+    this.resumeAttempts++;
+
+    setTimeout(() => {
+      console.log('Attempting to resume WebSocket connection...');
+      this.ws = new WebSocket(`wss://gateway.discord.gg/?v=9&encoding=json&session_id=${this.sessionId}&seq=${this.seq}`);
+      this.ws.on('open', () => {
+        console.log('WebSocket connection resumed successfully!');
+        this.startHeartbeat();
+        this.resumeAttempts = 0;
+      });
+
+      this.ws.on('message', async (data) => {
+        const payload = JSON.parse(data);
+        if (payload.s !== null) this.seq = payload.s;
+        require('../utils/Emit')(this, payload);
+      });
+
+      this.ws.on('close', (code) => {
+        console.log(`Disconnected with code ${code}`);
+        this.stopHeartbeat();
+        if (code === 4004 || code === 4010) {
+          // Invalid token or shard
+          console.log('Invalid token or shard. Please check your credentials.');
+          return;
+        }h
+
+        this.resumeWebSocket();
+      });
+    }, 5000);
   }
 
   on(event, handler) {
@@ -60,4 +107,3 @@ class WebSocketManager {
 }
 
 module.exports = WebSocketManager;
-

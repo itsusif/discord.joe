@@ -12,10 +12,6 @@ class DiscordClient {
     this.websocketManager.connect();
   }
 
-  fetchGuild(guildId) {
-    return this.websocketManager.fetchGuild(guildId);
-  }
-
   on(event, handler) {
     this.websocketManager.on(event, handler);
   }

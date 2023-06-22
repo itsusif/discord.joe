@@ -13,7 +13,7 @@ class WebSocketManager {
   }
 
   connect() { 
-    this.ws = new WebSocket('wss://gateway.discord.gg/?v=10&encoding=json');
+    this.ws = new WebSocket('wss://gateway.discord.gg/?vv=9&encoding=json');
     this.ws.on('open', () => {
       console.log('Connected to the Discord Gateway!');
       this.ws.send(JSON.stringify(this.getGatewayData()));
@@ -72,7 +72,7 @@ class WebSocketManager {
 
     setTimeout(() => {
       console.log('Attempting to resume WebSocket connection...');
-      this.ws = new WebSocket(`wss://gateway.discord.gg/?v=10&encoding=json&session_id=${this.sessionId}&seq=${this.seq}`);
+      this.ws = new WebSocket(`wss://gateway.discord.gg/?vv=9&encoding=json&session_id=${this.sessionId}&seq=${this.seq}`);
       this.ws.on('open', () => {
         console.log('WebSocket connection resumed successfully!');
         this.startHeartbeat();

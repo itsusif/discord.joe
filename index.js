@@ -19,13 +19,15 @@ client.on('messageCreate', (message) => {
             .setTitle('Title 2')
             .setColor(16711680)
             .setDescription('Description 2');
-        message.reply({ content: 'HELLO', embeds: [embed1, embed2] });
+        message.channel.send({ content: 'HELLO', embeds: [embed1, embed2] }).then((msg) => {
+            msg.edit('h')
+        });
     } else if (message.content == 'hello') {
-        message.reply('HEY').then((msg) =>{
-            msg.edit('hey').catch(()=>{
+        message.reply('HEY').then((msg) => {
+            msg.edit('hey').catch(() => {
                 return
             })
-        }).catch(() =>{
+        }).catch(() => {
             return
         })
     }
@@ -61,8 +63,10 @@ client.on('interactionCreate', (interaction) => {
         ])
         .addField('Inline field title2', 'Some value here', true);
 
-        interaction.reply('HSS')
-    interaction.channel.send('a').then((msg) =>{
+    interaction.reply({ embeds: [embed1] }).then(() => {
+        interaction.edit('HELLO')
+    })
+    interaction.channel.send('a').then((msg) => {
         msg.edit({
             content: 'hd',
             embeds: [],

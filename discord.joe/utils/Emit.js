@@ -1,4 +1,7 @@
-const { reply, channel_send, edit_message } = require('./message');
+const { channel_send } = require('./message/channe.send');
+const { message_reply } = require('./message/reply');
+const { interaction_edit } = require('./interaction/edit')
+const { interaction_reply } = require('./interaction/reply')
 const { channel } = require('./channel');
 
 module.exports = async (t, data) => {
@@ -6,14 +9,13 @@ module.exports = async (t, data) => {
         t.eventEmitter.emit('ready', data.d);
     } else if (data.t == 'MESSAGE_CREATE') {
         data.d.channel = await channel.bind({ client: t.client, channel_id: data.d.channel_id });
-        data.d.reply = reply.bind({ client: t.client, message: data.d, IsInteraction: false });
+        data.d.reply = message_reply.bind({ client: t.client, message: data.d});
         data.d.channel.send = channel_send.bind({ client: t.client, channel_id: data.d.channel_id });
-        data.d.edit = edit_message.bind({ client: t.client, message: data.d, channel_id: data.d.channel_id, IsInteraction: false });
         t.eventEmitter.emit('messageCreate', data.d);
     } else if (data.t == 'INTERACTION_CREATE') {
-        data.d.reply = reply.bind({ client: t.client, interaction: data.d, IsInteraction: true });
+        data.d.reply = interaction_reply.bind({ client: t.client, interaction: data.d });
         data.d.channel.send = channel_send.bind({ client: t.client, channel_id: data.d.channel_id });
-        data.d.edit = edit_message.bind({ client: t.client, interaction: data.d, IsInteraction: true });
+        data.d.edit = interaction_edit.bind({ interaction: data.d })
         t.eventEmitter.emit('interactionCreate', data.d);
     }
 };

@@ -12,8 +12,8 @@ class WebSocketManager {
     this.resumeAttempts = 0;
   }
 
-  connect() {
-    this.ws = new WebSocket('wss://gateway.discord.gg/?v=9&encoding=json');
+  connect() { 
+    this.ws = new WebSocket('wss://gateway.discord.gg/?v=10&encoding=json');
     this.ws.on('open', () => {
       console.log('Connected to the Discord Gateway!');
       this.ws.send(JSON.stringify(this.getGatewayData()));
@@ -30,7 +30,6 @@ class WebSocketManager {
       console.log(`Disconnected with code ${code}`);
       this.stopHeartbeat();
       if (code === 4004 || code === 4010) {
-        // Invalid token or shard
         console.log('Invalid token or shard. Please check your credentials.');
         return;
       }
@@ -63,7 +62,6 @@ class WebSocketManager {
   stopHeartbeat() {
     clearInterval(this.heartbeatInterval);
   }
-
   resumeWebSocket() {
     if (this.resumeAttempts > 5) {
       console.log('Resume failed. Exceeded maximum resume attempts.');
@@ -74,7 +72,7 @@ class WebSocketManager {
 
     setTimeout(() => {
       console.log('Attempting to resume WebSocket connection...');
-      this.ws = new WebSocket(`wss://gateway.discord.gg/?v=9&encoding=json&session_id=${this.sessionId}&seq=${this.seq}`);
+      this.ws = new WebSocket(`wss://gateway.discord.gg/?v=10&encoding=json&session_id=${this.sessionId}&seq=${this.seq}`);
       this.ws.on('open', () => {
         console.log('WebSocket connection resumed successfully!');
         this.startHeartbeat();
@@ -94,9 +92,15 @@ class WebSocketManager {
           // Invalid token or shard
           console.log('Invalid token or shard. Please check your credentials.');
           return;
-        }h
-
-        this.resumeWebSocket();
+        } else if (code === 1006) {
+          // Abnormal closure
+          console.log('Connection closed abnormally. Attempting to reconnect...');
+          this.resumeWebSocket();
+        } else {
+          // Other close codes
+          console.log('WebSocket connection closed with an unexpected code. Code:', code);
+          this.resumeWebSocket();
+        }
       });
     }, 5000);
   }
